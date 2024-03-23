@@ -1,65 +1,122 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
   const formulario = document.getElementById("formulario");
   const mensajeError = document.getElementById("mensajeError");
 
-  [
-    "id",
-    "nombre",
-    "apellidos",
-    "telefono",
-    "correo",
-    "edad",
-    "fechaNacimiento",
-  ].forEach((campo) => {
-    const input = document.getElementById(campo);
-    input.addEventListener("input", validarCampo);
-    input.addEventListener("blur", validarCampo);
+  formulario.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const id = formulario.id.value;
+      const nombre = formulario.nombre.value;
+      const apellidos = formulario.apellidos.value;
+      const telefono = formulario.telefono.value;
+      const correo = formulario.correo.value;
+      const edad = formulario.edad.value;
+      const fechaNacimiento = formulario.fechaNacimiento.value;
+
+      let errores = [];
+
+      // Validación de campos obligatorios
+      if (!id || !nombre || !apellidos || !telefono || !correo || !edad || !fechaNacimiento) {
+          errores.push("Todos los campos son obligatorios.");
+      }
+
+      if (!/^\d{5}$/.test(id)) {
+          errores.push("El ID debe tener 5 dígitos exactos.");
+          mostrarError(formulario.id, "El ID debe tener 5 dígitos exactos.");
+      } else {
+          ocultarError(formulario.id);
+      }
+
+      if (!nombre.trim()) {
+          errores.push("El nombre no puede estar vacío.");
+          mostrarError(formulario.nombre, "El nombre no puede estar vacío.");
+      } else {
+          ocultarError(formulario.nombre);
+      }
+
+      if (!apellidos.trim()) {
+          errores.push("Los apellidos no pueden estar vacíos.");
+          mostrarError(formulario.apellidos, "Los apellidos no pueden estar vacíos.");
+      } else {
+          ocultarError(formulario.apellidos);
+      }
+
+      if (!/^\(\d{3}\)\d{3}-\d{4}$/.test(telefono)) {
+          errores.push("El teléfono debe tener el formato (###)###-####.");
+          mostrarError(formulario.telefono, "El teléfono debe tener el formato (###)###-####.");
+      } else {
+          ocultarError(formulario.telefono);
+      }
+
+      if (!/^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/.test(correo)) {
+          errores.push("El correo electrónico no es válido.");
+          mostrarError(formulario.correo, "El correo electrónico no es válido.");
+      } else {
+          ocultarError(formulario.correo);
+      }
+
+      const edadNum = parseInt(edad);
+      if (isNaN(edadNum) || edadNum <= 0) {
+          errores.push("La edad debe ser un número positivo.");
+          mostrarError(formulario.edad, "La edad debe ser un número positivo.");
+      } else {
+          ocultarError(formulario.edad);
+      }
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaNacimiento)) {
+          errores.push("La fecha de nacimiento debe tener el formato AAAA-MM-DD.");
+          mostrarError(formulario.fechaNacimiento, "La fecha de nacimiento debe tener el formato AAAA-MM-DD.");
+      } else {
+          ocultarError(formulario.fechaNacimiento);
+      }
+
+      if (errores.length > 0) {
+          mensajeError.textContent = errores.join("\n");
+          mensajeError.style.color = "red";
+      } else {
+          // Crear un objeto con los datos del formulario
+          const datosFormulario = {
+              id,
+              nombre,
+              apellidos,
+              telefono,
+              correo,
+              edad,
+              fechaNacimiento
+          };
+
+          try {
+              // Guardar los datos del formulario en el almacenamiento local
+              localStorage.setItem("formularioData", JSON.stringify(datosFormulario));
+
+              // Redireccionar a la página de resultados
+              window.location.href = "resultados.html";
+          } catch (error) {
+              mensajeError.textContent = "Error al guardar los datos en el almacenamiento local.";
+              mensajeError.style.color = "red";
+          }
+      }
   });
 
-  function validarCampo(event) {
-    const input = event.target;
-    const nombreCampo = input.name;
-    const valorCampo = input.value;
-
-    if (event.type === "blur" || valorCampo !== "") {
-      if (nombreCampo === "id" && !/^\d{5}$/.test(valorCampo)) {
-        mensajeError.textContent = "El ID debe tener 5 dígitos exactos.";
-      } else if (
-        ["nombre", "apellidos"].includes(nombreCampo) &&
-        valorCampo.trim() === ""
-      ) {
-        mensajeError.textContent =
-          "El nombre y los apellidos no pueden estar vacíos.";
-      } else if (
-        nombreCampo === "telefono" &&
-        !/^\d{3}\d{3}-\d{4}$/.test(valorCampo)
-      ) {
-        mensajeError.textContent =
-          "El teléfono debe tener el formato (###)###-####.";
-      } else if (
-        nombreCampo === "correo" &&
-        !/^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/.test(valorCampo)
-      ) {
-        mensajeError.textContent = "El correo electrónico no es válido.";
-      } else if (nombreCampo === "edad") {
-        const edadNum = parseInt(valorCampo);
-        if (isNaN(edadNum) || edadNum <= 0) {
-          mensajeError.textContent = "La edad debe ser un número positivo.";
-        }
-      } else if (
-        nombreCampo === "fechaNacimiento" &&
-        !/^\d{4}-\d{2}-\d{2}$/.test(valorCampo)
-      ) {
-        mensajeError.textContent =
-          "La fecha de nacimiento debe tener el formato AAAA-MM-DD.";
+  function mostrarError(elemento, mensaje) {
+      const errorContainer = elemento.parentElement.querySelector(".error-message");
+      if (!errorContainer) {
+          const newErrorContainer = document.createElement("p");
+          newErrorContainer.className = "error-message";
+          newErrorContainer.textContent = mensaje;
+          newErrorContainer.style.color = "red";
+          elemento.parentElement.appendChild(newErrorContainer);
       } else {
-        if (
-          input.nextElementSibling &&
-          input.nextElementSibling.matches("#mensajeError")
-        ) {
-          mensajeError.textContent = "";
-        }
+          errorContainer.textContent = mensaje;
+          errorContainer.style.display = "block";
       }
-    }
+  }
+
+  function ocultarError(elemento) {
+      const errorContainer = elemento.parentElement.querySelector(".error-message");
+      if (errorContainer) {
+          errorContainer.textContent = "";
+          errorContainer.style.display = "none";
+      }
   }
 });
